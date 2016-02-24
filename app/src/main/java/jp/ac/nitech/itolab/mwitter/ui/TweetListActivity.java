@@ -156,11 +156,11 @@ public class TweetListActivity extends BaseActivity implements
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        Bundle extras = data.getExtras();
 
         switch (requestCode) {
             case REQUEST_CODE_TWEET_CREATE:
                 if (resultCode == RESULT_OK) {
+                    Bundle extras = data.getExtras();
                     String content = extras.getString(TweetCreateActivity.RESULT_KEY_CONTENT);
                     processPostTweet(content);
                 } else {
