@@ -52,6 +52,8 @@ public class TweetListActivity extends BaseActivity implements
         LoaderManager.LoaderCallbacks<Cursor> {
     private static final String TAG = makeLogTag(TweetListActivity.class);
 
+    private static final int REQUEST_CODE_TWEET_CREATE = 101;
+
     /**
      * Whether or not the activity is in two-pane mode, i.e. running on a tablet
      * device.
@@ -107,33 +109,7 @@ public class TweetListActivity extends BaseActivity implements
         mFloatingActionButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(final View view) {
-                final Tweet tweet = Tweet.createNew("新規投稿");
-                new AsyncTask<Void, Void, Void>() {
-                    @Override
-                    protected void onPreExecute() {
-                        Snackbar.make(view, "Posting", Snackbar.LENGTH_LONG)
-                                .setAction("Action", null).show();
-                    }
-                    @Override
-                    protected Void doInBackground(Void... params) {
-                        try {
-                            Tweet newTweet = Tweet.fromResponse(new TweetHandler(TweetListActivity.this).postTweet(tweet.toRequest()));
-                            LOGD(TAG, "newTweet"+newTweet);
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                            LOGE(TAG, "error", e);
-                        }
-                        return null;
-                    }
-                    @Override
-                    protected void onPostExecute(Void aVoid) {
-                        Snackbar.make(view, "Tweet posted", Snackbar.LENGTH_LONG)
-                                .setAction("Action", null).show();
-                    }
-                }.execute();
-
-//                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-//                        .setAction("Action", null).show();
+                startActivityForResult(new Intent(TweetListActivity.this, TweetCreateActivity.class), REQUEST_CODE_TWEET_CREATE);
             }
         });
     }
@@ -175,6 +151,52 @@ public class TweetListActivity extends BaseActivity implements
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
         ((SimpleItemRecyclerViewAdapter) mRecyclerView.getAdapter()).swapCursor(null);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        Bundle extras = data.getExtras();
+
+        switch (requestCode) {
+            case REQUEST_CODE_TWEET_CREATE:
+                if (resultCode == RESULT_OK) {
+                    String content = extras.getString(TweetCreateActivity.RESULT_KEY_CONTENT);
+                    processPostTweet(content);
+                } else {
+                    // ツイートしない
+                    LOGD(TAG, "Tweet not posted. resultCode="+resultCode);
+                }
+                break;
+        }
+    }
+
+    private void processPostTweet(String content) {
+        final Tweet tweet = Tweet.createNew(content);
+        final View view = findViewById(android.R.id.content);
+        new AsyncTask<Void, Void, Void>() {
+            @Override
+            protected void onPreExecute() {
+                Snackbar.make(view, "Posting", Snackbar.LENGTH_LONG)
+                        .setAction("Action", null).show();
+            }
+            @Override
+            protected Void doInBackground(Void... params) {
+                try {
+                    Tweet newTweet = Tweet.fromResponse(new TweetHandler(TweetListActivity.this).postTweet(tweet.toRequest()));
+                    LOGD(TAG, "newTweet"+newTweet);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    LOGE(TAG, "error", e);
+                }
+                return null;
+            }
+            @Override
+            protected void onPostExecute(Void aVoid) {
+                Snackbar.make(view, "Tweet posted", Snackbar.LENGTH_LONG)
+                        .setAction("Action", null).show();
+            }
+        }.execute();
     }
 
     public class SimpleItemRecyclerViewAdapter

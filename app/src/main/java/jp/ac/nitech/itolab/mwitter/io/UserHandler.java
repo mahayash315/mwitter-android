@@ -10,6 +10,7 @@ import java.net.URL;
 import jp.ac.nitech.itolab.mwitter.Config;
 import jp.ac.nitech.itolab.mwitter.io.response.Login;
 import jp.ac.nitech.itolab.mwitter.io.response.User;
+import jp.ac.nitech.itolab.mwitter.util.PreferencesUtils;
 
 /**
  * {@link jp.ac.nitech.itolab.mwitter.io.response.User} を処理する {@link JSONHandler}
@@ -27,6 +28,9 @@ public class UserHandler extends JSONHandler {
         URL url = uri.toURL();
 
         Login response = httpPost(url, request, Login.class);
+        if (response.result) {
+            PreferencesUtils.User.setAuthToken(mContext, response.authToken);
+        }
         return response;
     }
 

@@ -34,8 +34,7 @@
         <activity
             android:name=".ui.TweetListActivity"
             android:label="@string/title_tweet_list"
-            android:theme="@style/AppTheme.NoActionBar">
-        </activity>
+            android:theme="@style/AppTheme.NoActionBar"></activity>
         <activity
             android:name=".ui.TweetDetailActivity"
             android:label="@string/title_tweet_detail"
@@ -46,8 +45,12 @@
                 android:value=".ui.TweetListActivity" />
         </activity>
         <activity
+            android:name=".ui.TweetCreateActivity"
+            android:theme="@style/AppTheme.DimDialog">
+        </activity>
+        <activity
             android:name=".ui.SettingsActivity"
-            android:label="@string/title_activity_settings"></activity>
+            android:label="@string/title_activity_settings" />
         <!-- <activity android:name=".ui.BaseActivity"></activity> -->
 
 
@@ -58,7 +61,6 @@
         <provider
             android:name="com.activeandroid.content.ContentProvider"
             android:authorities="jp.ac.nitech.itolab.mwitter" />
-
     </application>
 
 </manifest>

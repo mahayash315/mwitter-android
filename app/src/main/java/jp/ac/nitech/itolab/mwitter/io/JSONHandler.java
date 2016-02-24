@@ -2,14 +2,10 @@ package jp.ac.nitech.itolab.mwitter.io;
 
 import android.content.Context;
 
-import com.fasterxml.jackson.core.JsonParseException;
-
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
-import java.net.ProtocolException;
 import java.net.URL;
 
 import jp.ac.nitech.itolab.mwitter.Config;
@@ -17,6 +13,7 @@ import jp.ac.nitech.itolab.mwitter.util.JacksonFactory;
 import jp.ac.nitech.itolab.mwitter.util.PreferencesUtils;
 
 import static jp.ac.nitech.itolab.mwitter.util.LogUtils.LOGD;
+import static jp.ac.nitech.itolab.mwitter.util.LogUtils.LOGE;
 import static jp.ac.nitech.itolab.mwitter.util.LogUtils.makeLogTag;
 
 /**
@@ -27,6 +24,8 @@ public class JSONHandler {
     private static final String TAG = makeLogTag(JSONHandler.class);
 
     protected final Context mContext;
+
+    protected boolean mSessionRenewed = false;
 
     public JSONHandler(Context context) {
         mContext = context;
@@ -56,7 +55,14 @@ public class JSONHandler {
         // 接続
         conn.connect();
 
-        return conn;
+        if (sessionExpired(conn) && !mSessionRenewed) {
+            conn.disconnect();
+            onSessionExpired();
+            mSessionRenewed = true;
+            return httpGet(url);
+        } else {
+            return conn;
+        }
     }
 
     /**
@@ -96,9 +102,15 @@ public class JSONHandler {
             }
         }
 
-        return conn;
+        if (sessionExpired(conn) && !mSessionRenewed) {
+            conn.disconnect();
+            onSessionExpired();
+            mSessionRenewed = true;
+            return httpPost(url, data);
+        } else {
+            return conn;
+        }
     }
-
 
     /**
      * GET メソッドでリクエストを送る
@@ -156,6 +168,21 @@ public class JSONHandler {
             if (in != null) {
                 in.close();
             }
+        }
+    }
+
+    private boolean sessionExpired(HttpURLConnection conn) throws IOException {
+        return (!conn.getURL().toString().equals(Config.Api.URL.LOGIN) && conn.getResponseCode() == 401);
+    }
+
+    private void onSessionExpired() throws IOException {
+        jp.ac.nitech.itolab.mwitter.io.request.Login request = new jp.ac.nitech.itolab.mwitter.io.request.Login();
+        request.username = PreferencesUtils.User.getAuthUsername(mContext, null);
+        request.password = PreferencesUtils.User.getAuthPassword(mContext, null);
+        jp.ac.nitech.itolab.mwitter.io.response.Login response = new UserHandler(mContext).login(request);
+
+        if (!response.result) {
+            LOGE(TAG, "Auto Login Failed");
         }
     }
 

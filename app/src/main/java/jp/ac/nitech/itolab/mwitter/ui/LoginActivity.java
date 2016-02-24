@@ -330,9 +330,8 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
                 Login response = new UserHandler(context).login(request);
                 if (response.result) {
-                    PreferencesUtils.User.setAuthUsername(context, mUsername);
-                    PreferencesUtils.User.setAuthPassword(context, mPassword);
-                    PreferencesUtils.User.setAuthToken(context, response.authToken);
+                    PreferencesUtils.User.setAuthUsername(context, request.username);
+                    PreferencesUtils.User.setAuthPassword(context, request.password);
                 }
                 return response.result;
             } catch (IOException e) {
